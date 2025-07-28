@@ -1,5 +1,3 @@
-// app/page.tsx
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -20,30 +18,35 @@ import {
   type TableData,
   type ChannelData
 } from '@/lib/mock-data';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Dashboard() {
+  // State variables to hold the data for the dashboard components
   const [metricsData, setMetricsData] = useState<MetricData[]>([]);
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [tableData, setTableData] = useState<TableData[]>([]);
   const [channelData, setChannelData] = useState<ChannelData[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // useEffect hook to fetch data when the component mounts and set up a refresh interval
   useEffect(() => {
     const fetchAllData = async () => {
       try {
+        // Fetch all data points concurrently for better performance
         const [metrics, chart, table, channel] = await Promise.all([
           getMetricsDataFromApi(),
           getChartDataFromApi(),
           getTableDataFromApi(),
           getChannelDataFromApi()
         ]);
+        // Update the state with the new data
         setMetricsData(metrics);
         setChartData(chart);
         setTableData(table);
         setChannelData(channel);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
-        // You could set some error state here to show a message to the user
+        // In a real application, you might set an error state here to show a message to the user
       } finally {
         setLoading(false);
       }
@@ -51,17 +54,37 @@ export default function Dashboard() {
 
     fetchAllData();
 
-    const interval = setInterval(fetchAllData, 30000); // Refresh every 30 seconds
+    // Set up an interval to refresh the data every 30 seconds
+    const interval = setInterval(fetchAllData, 30000);
 
+    // Cleanup function to clear the interval when the component unmounts
     return () => clearInterval(interval);
   }, []);
 
-
+  // Display a loading skeleton UI while the initial data is being fetched
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-lg text-muted-foreground">Loading Dashboard...</p>
-      </div>
+        <div className="min-h-screen bg-background">
+            <DashboardHeader />
+            <main className="container mx-auto px-6 py-8 space-y-8">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <Skeleton className="h-9 w-72 mb-2" />
+                        <Skeleton className="h-5 w-96" />
+                    </div>
+                    <Skeleton className="h-8 w-24 rounded-full" />
+                </div>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                    <Skeleton className="h-36 rounded-lg" />
+                    <Skeleton className="h-36 rounded-lg" />
+                    <Skeleton className="h-36 rounded-lg" />
+                    <Skeleton className="h-36 rounded-lg" />
+                </div>
+                <div className="grid gap-6 md:grid-cols-1">
+                    <Skeleton className="h-96 rounded-lg" />
+                </div>
+            </main>
+        </div>
     );
   }
 
