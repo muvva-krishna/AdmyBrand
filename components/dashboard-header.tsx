@@ -16,7 +16,7 @@ export function DashboardHeader() {
               <span className="text-white font-bold text-sm">AI</span>
             </div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-              ADmyBRAND Insights
+              ADmyBRAND Insights - Live APIs
             </h1>
           </div>
         </div>
