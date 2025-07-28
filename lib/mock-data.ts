@@ -1,6 +1,5 @@
-import { subDays, format } from 'date-fns';
+import { addDays, subDays, format } from 'date-fns';
 
-// --- INTERFACES ---
 export interface MetricData {
   title: string;
   value: string;
@@ -35,113 +34,7 @@ export interface ChannelData {
   color: string;
 }
 
-// --- HELPER FUNCTIONS ---
-const formatNumber = (num: number) => {
-  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(2)}b`;
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(2)}m`;
-  if (num >= 1_000) return `${(num / 1_000).toFixed(2)}k`;
-  return num.toString();
-};
-
-const fetchData = async (url: string) => {
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error(`API call failed: ${response.status}`);
-    }
-    const json = await response.json();
-    if (!json.data) {
-        throw new Error(`API response missing 'data' property for url: ${url}`);
-    }
-    return json.data;
-};
-
-// --- API-BASED DATA FUNCTIONS ---
-
-export const getMetricsDataFromApi = async (): Promise<MetricData[]> => {
-  const data = await fetchData('https://api.coincap.io/v2/assets?limit=4');
-  if (!Array.isArray(data) || data.length === 0) return [];
-
-  const [btc, eth, usdt, bnb] = data;
-
-  return [
-    {
-      title: btc.name,
-      value: `$${parseFloat(btc.priceUsd).toFixed(2)}`,
-      change: parseFloat(btc.changePercent24Hr),
-      trend: parseFloat(btc.changePercent24Hr) >= 0 ? 'up' : 'down',
-      icon: 'DollarSign'
-    },
-    {
-      title: eth.name,
-      value: `$${parseFloat(eth.priceUsd).toFixed(2)}`,
-      change: parseFloat(eth.changePercent24Hr),
-      trend: parseFloat(eth.changePercent24Hr) >= 0 ? 'up' : 'down',
-      icon: 'Users'
-    },
-    {
-      title: usdt.name,
-      value: `$${parseFloat(usdt.priceUsd).toFixed(2)}`,
-      change: parseFloat(usdt.changePercent24Hr),
-      trend: parseFloat(usdt.changePercent24Hr) >= 0 ? 'up' : 'down',
-      icon: 'Target'
-    },
-    {
-      title: bnb.name,
-      value: `$${parseFloat(bnb.priceUsd).toFixed(2)}`,
-      change: parseFloat(bnb.changePercent24Hr),
-      trend: parseFloat(bnb.changePercent24Hr) >= 0 ? 'up' : 'down',
-      icon: 'TrendingUp'
-    }
-  ];
-};
-
-export const getChartDataFromApi = async (): Promise<ChartDataPoint[]> => {
-    const data = await fetchData('https://api.coincap.io/v2/assets/bitcoin/history?interval=d1');
-    if (!Array.isArray(data)) return [];
-
-    return data.slice(-30).map((item: any) => ({
-        date: format(new Date(item.time), 'MMM dd'),
-        revenue: parseFloat(item.priceUsd),
-        users: parseFloat(item.priceUsd) / 20 + Math.random() * 100,
-        conversions: parseFloat(item.priceUsd) / 100 + Math.random() * 50,
-        impressions: parseFloat(item.priceUsd) * 2 + Math.random() * 1000,
-        clicks: parseFloat(item.priceUsd) / 5 + Math.random() * 200,
-    }));
-};
-
-export const getTableDataFromApi = async (): Promise<TableData[]> => {
-    const data = await fetchData('https://api.coincap.io/v2/assets?limit=12');
-    if (!Array.isArray(data)) return [];
-
-    return data.map((item: any) => ({
-        id: item.id,
-        campaign: item.name,
-        channel: item.symbol,
-        revenue: parseFloat(item.marketCapUsd),
-        conversions: parseFloat(item.volumeUsd24Hr),
-        ctr: parseFloat(item.changePercent24Hr),
-        status: parseFloat(item.changePercent24Hr) >= 0 ? 'active' : 'paused',
-        date: format(new Date(), 'MMM dd, yyyy')
-    }));
-};
-
-export const getChannelDataFromApi = async (): Promise<ChannelData[]> => {
-    const data = await fetchData('https://api.coincap.io/v2/assets?limit=5');
-    if (!Array.isArray(data)) return [];
-    
-    const colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#6B7280'];
-    const totalMarketCap = data.reduce((acc, curr) => acc + parseFloat(curr.marketCapUsd), 0);
-
-    return data.map((item: any, index: number) => ({
-        name: item.symbol,
-        value: parseFloat(((parseFloat(item.marketCapUsd) / totalMarketCap) * 100).toFixed(2)),
-        color: colors[index]
-    }));
-};
-
-
-// --- STATIC MOCK DATA (FALLBACK) ---
-
+// Generate mock metrics data
 export const generateMetricsData = (): MetricData[] => [
   {
     title: 'Total Revenue',
@@ -173,13 +66,16 @@ export const generateMetricsData = (): MetricData[] => [
   }
 ];
 
+// Generate mock chart data for the last 30 days
 export const generateChartData = (): ChartDataPoint[] => {
   const data: ChartDataPoint[] = [];
   const today = new Date();
+  
   for (let i = 29; i >= 0; i--) {
     const date = subDays(today, i);
     const baseRevenue = 25000 + Math.random() * 10000;
     const baseUsers = 800 + Math.random() * 400;
+    
     data.push({
       date: format(date, 'MMM dd'),
       revenue: Math.round(baseRevenue),
@@ -189,17 +85,21 @@ export const generateChartData = (): ChartDataPoint[] => {
       clicks: Math.round(baseUsers * (0.8 + Math.random() * 0.4))
     });
   }
+  
   return data;
 };
 
+// Generate mock table data
 export const generateTableData = (): TableData[] => {
   const campaigns = [
     'Summer Sale 2024', 'Brand Awareness Q4', 'Product Launch', 'Holiday Special',
     'New Customer Acquisition', 'Retargeting Campaign', 'Email Marketing', 'Social Media Boost',
     'Mobile App Promotion', 'Video Ad Series', 'Influencer Collaboration', 'SEO Content Drive'
   ];
+  
   const channels = ['Google Ads', 'Facebook', 'Instagram', 'LinkedIn', 'TikTok', 'YouTube', 'Email', 'Organic'];
   const statuses: ('active' | 'paused' | 'completed')[] = ['active', 'paused', 'completed'];
+  
   return campaigns.map((campaign, index) => ({
     id: `camp-${index + 1}`,
     campaign,
@@ -212,6 +112,7 @@ export const generateTableData = (): TableData[] => {
   }));
 };
 
+// Generate channel distribution data
 export const generateChannelData = (): ChannelData[] => [
   { name: 'Google Ads', value: 35, color: '#3B82F6' },
   { name: 'Facebook', value: 25, color: '#10B981' },

@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Search, User, Bitcoin } from 'lucide-react';
+import { Bell, Search, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -13,10 +13,10 @@ export function DashboardHeader() {
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
-              <Bitcoin className="h-5 w-5 text-white" />
+              <span className="text-white font-bold text-sm">AI</span>
             </div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-              Crypto Market Insights
+              ADmyBRAND Insights
             </h1>
           </div>
         </div>
@@ -25,7 +25,7 @@ export function DashboardHeader() {
           <div className="relative hidden md:block">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search assets..."
+              placeholder="Search campaigns..."
               className="w-64 pl-10"
             />
           </div>
