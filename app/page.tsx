@@ -1,3 +1,5 @@
+// app/page.tsx
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,11 +10,11 @@ import { ConversionChart } from '@/components/conversion-chart';
 import { ChannelChart } from '@/components/channel-chart';
 import { DataTable } from '@/components/data-table';
 import { RealTimeIndicator } from '@/components/real-time-indicator';
-import { 
-  generateMetricsData, 
-  generateChartData, 
-  generateTableData, 
-  generateChannelData,
+import {
+  getMetricsDataFromApi,
+  getChartDataFromApi,
+  getTableDataFromApi,
+  getChannelDataFromApi,
   type MetricData,
   type ChartDataPoint,
   type TableData,
@@ -24,34 +26,56 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [tableData, setTableData] = useState<TableData[]>([]);
   const [channelData, setChannelData] = useState<ChannelData[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initial data load
-    setMetricsData(generateMetricsData());
-    setChartData(generateChartData());
-    setTableData(generateTableData());
-    setChannelData(generateChannelData());
+    const fetchAllData = async () => {
+      try {
+        const [metrics, chart, table, channel] = await Promise.all([
+          getMetricsDataFromApi(),
+          getChartDataFromApi(),
+          getTableDataFromApi(),
+          getChannelDataFromApi()
+        ]);
+        setMetricsData(metrics);
+        setChartData(chart);
+        setTableData(table);
+        setChannelData(channel);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+        // You could set some error state here to show a message to the user
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Simulate real-time updates every 30 seconds
-    const interval = setInterval(() => {
-      setMetricsData(generateMetricsData());
-      setChartData(generateChartData());
-    }, 30000);
+    fetchAllData();
+
+    const interval = setInterval(fetchAllData, 30000); // Refresh every 30 seconds
 
     return () => clearInterval(interval);
   }, []);
 
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-lg text-muted-foreground">Loading Dashboard...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader />
-      
+
       <main className="container mx-auto px-6 py-8 space-y-8">
         {/* Header Section */}
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
             <p className="text-muted-foreground mt-2">
-              Track your digital marketing performance in real-time
+              Real-time cryptocurrency market insights
             </p>
           </div>
           <RealTimeIndicator />
