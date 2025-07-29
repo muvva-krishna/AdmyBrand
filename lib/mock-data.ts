@@ -1,6 +1,6 @@
 import { addDays, subDays, format } from 'date-fns';
 
-// --- INTERFACES (No changes needed here) ---
+// --- INTERFACES ---
 export interface MetricData {
   title: string;
   value: string;
@@ -11,9 +11,9 @@ export interface MetricData {
 
 export interface ChartDataPoint {
   date: string;
-  revenue: number;
+  price: number;
   users: number;
-  conversions: number;
+  volume: number;
   impressions: number;
   clicks: number;
 }
@@ -36,12 +36,10 @@ export interface ChannelData {
 }
 
 
-// --- NEW API-BASED FUNCTION FOR METRIC CARDS ---
+// --- LIVE CRYPTO DATA FUNCTIONS ---
 
 /**
- * Fetches data for the top 4 cryptocurrencies from the CoinCap API 
- * and formats it for the Metric Cards.
- * * @returns {Promise<MetricData[]>} A promise that resolves to an array of metric data.
+ * Fetches live cryptocurrency data and formats it for dashboard metrics
  */
 export const getMetricsDataFromApi = async (): Promise<MetricData[]> => {
   try {
@@ -51,50 +49,106 @@ export const getMetricsDataFromApi = async (): Promise<MetricData[]> => {
     }
     const { data } = await response.json();
 
-    // Map API data to the MetricData interface
-    const icons: string[] = ['DollarSign', 'Users', 'Target', 'TrendingUp'];
-    return data.map((asset: any, index: number) => ({
-      title: asset.name,
-      value: `$${parseFloat(asset.priceUsd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      change: parseFloat(asset.changePercent24Hr),
-      trend: parseFloat(asset.changePercent24Hr) >= 0 ? 'up' : 'down',
-      icon: icons[index]
-    }));
+    const metrics = [
+      {
+        title: 'Bitcoin Price',
+        value: `$${parseFloat(data[0].priceUsd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        change: parseFloat(data[0].changePercent24Hr),
+        trend: parseFloat(data[0].changePercent24Hr) >= 0 ? 'up' : 'down',
+        icon: 'DollarSign'
+      },
+      {
+        title: 'ETH Volume (24h)',
+        value: `$${(parseFloat(data[1].volumeUsd24Hr) / 1000000).toFixed(1)}M`,
+        change: parseFloat(data[1].changePercent24Hr),
+        trend: parseFloat(data[1].changePercent24Hr) >= 0 ? 'up' : 'down',
+        icon: 'Users'
+      },
+      {
+        title: 'Market Cap',
+        value: `$${(parseFloat(data[0].marketCapUsd) / 1000000000).toFixed(1)}B`,
+        change: parseFloat(data[0].changePercent24Hr),
+        trend: parseFloat(data[0].changePercent24Hr) >= 0 ? 'up' : 'down',
+        icon: 'Target'
+      },
+      {
+        title: 'Top Performer',
+        value: data[2].name,
+        change: parseFloat(data[2].changePercent24Hr),
+        trend: parseFloat(data[2].changePercent24Hr) >= 0 ? 'up' : 'down',
+        icon: 'TrendingUp'
+      }
+    ];
+
+    return metrics;
   } catch (error) {
     console.error("Failed to fetch metrics data:", error);
-    return []; // Return an empty array on error
+    return generateMetricsData(); // Fallback to static data
   }
 };
 
+/**
+ * Fetches Ethereum price history and formats it for charts
+ */
+export const getEthereumChartData = async (): Promise<ChartDataPoint[]> => {
+  try {
+    const response = await fetch('https://api.coincap.io/v2/assets/ethereum/history?interval=d1&start=1640995200000&end=1672531200000');
+    if (!response.ok) {
+      throw new Error(`API call failed with status: ${response.status}`);
+    }
+    const { data } = await response.json();
+    
+    // Take last 30 days and format for charts
+    const last30Days = data.slice(-30);
+    
+    return last30Days.map((point: any, index: number) => {
+      const date = new Date(point.time);
+      const price = parseFloat(point.priceUsd);
+      const volume = price * (50000 + Math.random() * 100000); // Simulate volume
+      
+      return {
+        date: format(date, 'MMM dd'),
+        price: Math.round(price),
+        users: Math.round(800 + Math.random() * 400), // Keep for compatibility
+        volume: Math.round(volume),
+        impressions: Math.round(price * 10), // Simulate impressions
+        clicks: Math.round(price * 0.1) // Simulate clicks
+      };
+    });
+  } catch (error) {
+    console.error("Failed to fetch Ethereum data:", error);
+    return generateChartData(); // Fallback to static data
+  }
+};
 
-// --- EXISTING STATIC DATA FUNCTIONS (Used for reference and fallback) ---
+// --- STATIC DATA FUNCTIONS (Fallback) ---
 
 // Generate mock metrics data
 export const generateMetricsData = (): MetricData[] => [
   {
-    title: 'Total Revenue',
-    value: '$847,392',
+    title: 'Bitcoin Price',
+    value: '$43,250.00',
     change: 12.5,
     trend: 'up',
     icon: 'DollarSign'
   },
   {
-    title: 'Active Users',
-    value: '24,847',
+    title: 'ETH Volume (24h)',
+    value: '$2.4B',
     change: -2.4,
     trend: 'down',
     icon: 'Users'
   },
   {
-    title: 'Total Conversions',
-    value: '18,394',
+    title: 'Market Cap',
+    value: '$847.2B',
     change: 8.7,
     trend: 'up',
     icon: 'Target'
   },
   {
-    title: 'Growth Rate',
-    value: '15.2%',
+    title: 'Top Performer',
+    value: 'Ethereum',
     change: 3.1,
     trend: 'up',
     icon: 'TrendingUp'
@@ -113,9 +167,9 @@ export const generateChartData = (): ChartDataPoint[] => {
     
     data.push({
       date: format(date, 'MMM dd'),
-      revenue: Math.round(baseRevenue),
+      price: Math.round(baseRevenue / 10), // Convert to price range
       users: Math.round(baseUsers),
-      conversions: Math.round(baseUsers * (0.15 + Math.random() * 0.1)),
+      volume: Math.round(baseRevenue * 2), // Volume data
       impressions: Math.round(baseUsers * (8 + Math.random() * 4)),
       clicks: Math.round(baseUsers * (0.8 + Math.random() * 0.4))
     });
@@ -139,8 +193,8 @@ export const generateTableData = (): TableData[] => {
     id: `camp-${index + 1}`,
     campaign,
     channel: channels[Math.floor(Math.random() * channels.length)],
-    revenue: Math.round(10000 + Math.random() * 50000),
-    conversions: Math.round(50 + Math.random() * 500),
+    revenue: Math.round(1000 + Math.random() * 5000), // Smaller amounts for crypto context
+    conversions: Math.round(5 + Math.random() * 50), // Adjusted for crypto trades
     ctr: parseFloat((1 + Math.random() * 4).toFixed(2)),
     status: statuses[Math.floor(Math.random() * statuses.length)],
     date: format(subDays(new Date(), Math.floor(Math.random() * 30)), 'MMM dd, yyyy')

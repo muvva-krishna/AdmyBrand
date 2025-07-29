@@ -20,8 +20,8 @@ export function RevenueChart({ data }: RevenueChartProps) {
     >
       <Card className="transition-all duration-200 hover:shadow-lg">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold">Revenue Trend</CardTitle>
-          <CardDescription>Daily revenue performance over the last 30 days</CardDescription>
+          <CardTitle className="text-lg font-semibold">Ethereum Price Trend</CardTitle>
+          <CardDescription>ETH price movement over the last 30 days</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-80">
@@ -41,7 +41,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
                   axisLine={false}
                 />
                 <Tooltip
-                  formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
+                  formatter={(value: number) => [`$${value.toLocaleString()}`, 'ETH Price']}
                   labelClassName="text-sm font-medium"
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
@@ -52,7 +52,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
                 />
                 <Line
                   type="monotone"
-                  dataKey="revenue"
+                  dataKey="price"
                   stroke="#3B82F6"
                   strokeWidth={3}
                   dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}

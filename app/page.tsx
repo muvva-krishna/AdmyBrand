@@ -9,8 +9,8 @@ import { ChannelChart } from '@/components/channel-chart';
 import { DataTable } from '@/components/data-table';
 import { RealTimeIndicator } from '@/components/real-time-indicator';
 import { 
-  generateMetricsData, 
-  generateChartData, 
+  getMetricsDataFromApi,
+  getEthereumChartData,
   generateTableData, 
   generateChannelData,
   type MetricData,
@@ -26,17 +26,45 @@ export default function Dashboard() {
   const [channelData, setChannelData] = useState<ChannelData[]>([]);
 
   useEffect(() => {
-    // Initial data load
-    setMetricsData(generateMetricsData());
-    setChartData(generateChartData());
+    // Initial data load with live data
+    const loadInitialData = async () => {
+      setIsLoading(true);
+      try {
+        const [metrics, charts] = await Promise.all([
+          getMetricsDataFromApi(),
+          getEthereumChartData()
+        ]);
+        setMetricsData(metrics);
+        setChartData(charts);
+      } catch (error) {
+        console.error('Failed to load initial data:', error);
+      } finally {
+        setIsLoading(false);
+        setLastUpdated(new Date());
+      }
+    };
+
+    loadInitialData();
     setTableData(generateTableData());
     setChannelData(generateChannelData());
 
-    // Simulate real-time updates every 30 seconds
+    // Real-time updates every 60 seconds
     const interval = setInterval(() => {
-      setMetricsData(generateMetricsData());
-      setChartData(generateChartData());
-    }, 30000);
+      const updateData = async () => {
+        try {
+          const [metrics, charts] = await Promise.all([
+            getMetricsDataFromApi(),
+            getEthereumChartData()
+          ]);
+          setMetricsData(metrics);
+          setChartData(charts);
+          setLastUpdated(new Date());
+        } catch (error) {
+          console.error('Failed to update data:', error);
+        }
+      };
+      updateData();
+    }, 60000);
 
     return () => clearInterval(interval);
   }, []);
@@ -49,9 +77,9 @@ export default function Dashboard() {
         {/* Header Section */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Crypto Analytics Dashboard</h2>
             <p className="text-muted-foreground mt-2">
-              Track your digital marketing performance in real-time
+              Track cryptocurrency market performance in real-time
             </p>
           </div>
           <RealTimeIndicator />
