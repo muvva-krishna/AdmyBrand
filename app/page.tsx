@@ -11,7 +11,9 @@ import { RealTimeIndicator } from '@/components/real-time-indicator';
 import { 
   getMetricsDataFromApi,
   getEthereumChartData,
-  generateTableData, 
+  getCryptoTableData,
+  getCryptoChannelData,
+  generateTableData,
   generateChannelData,
   type MetricData,
   type ChartDataPoint,
@@ -30,14 +32,21 @@ export default function Dashboard() {
     const loadInitialData = async () => {
       setIsLoading(true);
       try {
-        const [metrics, charts] = await Promise.all([
+        const [metrics, charts, table, channels] = await Promise.all([
           getMetricsDataFromApi(),
-          getEthereumChartData()
+          getEthereumChartData(),
+          getCryptoTableData(),
+          getCryptoChannelData()
         ]);
         setMetricsData(metrics);
         setChartData(charts);
+        setTableData(table);
+        setChannelData(channels);
       } catch (error) {
         console.error('Failed to load initial data:', error);
+        // Fallback to static data on error
+        setTableData(generateTableData());
+        setChannelData(generateChannelData());
       } finally {
         setIsLoading(false);
         setLastUpdated(new Date());
@@ -45,19 +54,21 @@ export default function Dashboard() {
     };
 
     loadInitialData();
-    setTableData(generateTableData());
-    setChannelData(generateChannelData());
 
     // Real-time updates every 60 seconds
     const interval = setInterval(() => {
       const updateData = async () => {
         try {
-          const [metrics, charts] = await Promise.all([
+          const [metrics, charts, table, channels] = await Promise.all([
             getMetricsDataFromApi(),
-            getEthereumChartData()
+            getEthereumChartData(),
+            getCryptoTableData(),
+            getCryptoChannelData()
           ]);
           setMetricsData(metrics);
           setChartData(charts);
+          setTableData(table);
+          setChannelData(channels);
           setLastUpdated(new Date());
         } catch (error) {
           console.error('Failed to update data:', error);
