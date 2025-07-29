@@ -102,25 +102,57 @@ export const generateMetricsData = (): MetricData[] => [
 ];
 
 // Generate mock chart data for the last 30 days
-export const generateChartData = (): ChartDataPoint[] => {
-  const data: ChartDataPoint[] = [];
+import { format } from 'date-fns';
+import { subDays } from 'date-fns';
+
+export interface ChartDataPoint {
+  date: string;
+  revenue: number; // replaced with coin price
+  users: number;
+  conversions: number;
+  impressions: number;
+  clicks: number;
+}
+
+const options = {
+  headers: {
+    'x-access-token': 'your-api-key', // Replace with your actual API key
+  },
+};
+
+export const generateChartData = async (): Promise<ChartDataPoint[]> => {
+  const response = await fetch(
+    'https://api.coinranking.com/v2/coin/Qwsogvtv82FCd/price-history?timePeriod=30d',
+    options
+  );
+
+  const result = await response.json();
+
+  if (!result.data?.history || !Array.isArray(result.data.history)) {
+    throw new Error('Invalid API response');
+  }
+
+  // Get the last 30 data points (oldest to newest)
+  const history = result.data.history.slice(-30).reverse();
+
   const today = new Date();
-  
-  for (let i = 29; i >= 0; i--) {
-    const date = subDays(today, i);
-    const baseRevenue = 25000 + Math.random() * 10000;
+
+  const data: ChartDataPoint[] = history.map((entry, index) => {
+    const date = subDays(today, 29 - index);
+    const price = parseFloat(entry.price);
+
     const baseUsers = 800 + Math.random() * 400;
-    
-    data.push({
+
+    return {
       date: format(date, 'MMM dd'),
-      revenue: Math.round(baseRevenue),
+      revenue: Math.round(price), // using live price here
       users: Math.round(baseUsers),
       conversions: Math.round(baseUsers * (0.15 + Math.random() * 0.1)),
       impressions: Math.round(baseUsers * (8 + Math.random() * 4)),
-      clicks: Math.round(baseUsers * (0.8 + Math.random() * 0.4))
-    });
-  }
-  
+      clicks: Math.round(baseUsers * (0.8 + Math.random() * 0.4)),
+    };
+  });
+
   return data;
 };
 
