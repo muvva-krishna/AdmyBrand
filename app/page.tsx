@@ -1,103 +1,99 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { DashboardHeader } from '@/components/dashboard-header';
-import { MetricsCard } from '@/components/metrics-card';
-import { RevenueChart } from '@/components/revenue-chart';
-import { ConversionChart } from '@/components/conversion-chart';
-import { ChannelChart } from '@/components/channel-chart';
-import { DataTable } from '@/components/data-table';
-import { RealTimeIndicator } from '@/components/real-time-indicator';
-import { 
-  generateMetricsData, 
-  generateChartData, 
-  generateTableData, 
-  generateChannelData,
-  type MetricData,
-  type ChartDataPoint,
-  type TableData,
-  type ChannelData
-} from '@/lib/mock-data';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { generateChannelData } from '@/lib/generate-channel-data';
+import { generateChartData } from '@/lib/generate-chart-data';
+import { generateMetricsData } from '@/lib/generate-metrics-data';
+import { generateTableData } from '@/lib/generate-table-data';
+import { Metrics } from '@/components/dashboard/metrics';
+import { RevenueChart } from '@/components/dashboard/revenue-chart';
+import { TransactionsTable } from '@/components/dashboard/transactions-table';
+import { ChannelChart } from '@/components/dashboard/channel-chart';
+import { useEffect, useState } from 'react';
+import { ChartDataPoint, ChannelData, Metric, Transaction } from '@/types';
 
 export default function Dashboard() {
-  const [metricsData, setMetricsData] = useState<MetricData[]>([]);
+  const [metricsData, setMetricsData] = useState<Metric[]>([]);
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
-  const [tableData, setTableData] = useState<TableData[]>([]);
+  const [tableData, setTableData] = useState<Transaction[]>([]);
   const [channelData, setChannelData] = useState<ChannelData[]>([]);
 
   useEffect(() => {
-    // Initial data load
-    setMetricsData(generateMetricsData());
-    setChartData(generateChartData());
-    setTableData(generateTableData());
-    setChannelData(generateChannelData());
+    const fetchData = async () => {
+      try {
+        const [metrics, chart, table, channels] = await Promise.all([
+          generateMetricsData(),
+          generateChartData(),
+          generateTableData(),
+          generateChannelData()
+        ]);
+        setMetricsData(metrics);
+        setChartData(chart);
+        setTableData(table);
+        setChannelData(channels);
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      }
+    };
 
-    // Simulate real-time updates every 30 seconds
+    fetchData();
+
     const interval = setInterval(() => {
-      setMetricsData(generateMetricsData());
-      setChartData(generateChartData());
+      generateMetricsData().then(setMetricsData).catch(console.error);
+      generateChartData().then(setChartData).catch(console.error);
     }, 30000);
 
     return () => clearInterval(interval);
   }, []);
 
+  if (!chartData.length || !metricsData.length || !channelData.length) {
+    return (
+      <p className="text-center py-12 text-muted-foreground">
+        Loading dashboard...
+      </p>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader />
-      
-      <main className="container mx-auto px-6 py-8 space-y-8">
-        {/* Header Section */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
-            <p className="text-muted-foreground mt-2">
-              Track your digital marketing performance in real-time
-            </p>
-          </div>
-          <RealTimeIndicator />
-        </div>
-
-        {/* Metrics Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {metricsData.map((metric, index) => (
-            <MetricsCard
-              key={metric.title}
-              title={metric.title}
-              value={metric.value}
-              change={metric.change}
-              trend={metric.trend}
-              icon={metric.icon}
-              index={index}
-            />
-          ))}
-        </div>
-
-        {/* Charts Section */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="lg:col-span-2">
+    <div className="grid gap-4">
+      <Metrics data={metricsData} />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Revenue</CardTitle>
+            <CardDescription>Recent revenue over time</CardDescription>
+          </CardHeader>
+          <CardContent>
             <RevenueChart data={chartData} />
-          </div>
-          <div>
+          </CardContent>
+        </Card>
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>By Channels</CardTitle>
+            <CardDescription>Traffic by source</CardDescription>
+          </CardHeader>
+          <CardContent>
             <ChannelChart data={channelData} />
-          </div>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-          <ConversionChart data={chartData} />
-          <div className="lg:col-span-1">
-            {/* Placeholder for additional chart or widget */}
-            <div className="h-full min-h-[400px] rounded-lg border-2 border-dashed border-muted flex items-center justify-center">
-              <div className="text-center space-y-2">
-                <p className="text-muted-foreground">Additional Chart</p>
-                <p className="text-sm text-muted-foreground">Coming soon...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Data Table */}
-        <DataTable data={tableData} />
-      </main>
+          </CardContent>
+        </Card>
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
+          <CardDescription>
+            Recent orders from your store
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <TransactionsTable data={tableData} />
+        </CardContent>
+      </Card>
     </div>
   );
 }
