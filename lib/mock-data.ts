@@ -101,22 +101,10 @@ export const generateMetricsData = (): MetricData[] => [
   }
 ];
 
-// Generate mock chart data for the last 30 days
-import { format } from 'date-fns';
-import { subDays } from 'date-fns';
-
-export interface ChartDataPoint {
-  date: string;
-  revenue: number; // replaced with coin price
-  users: number;
-  conversions: number;
-  impressions: number;
-  clicks: number;
-}
 
 const options = {
   headers: {
-    'x-access-token': 'your-api-key', // Replace with your actual API key
+    'x-access-token': 'coinranking749e0202326ae013928e5a4cd89f605d1390baf012849a32', // Replace with your actual API key
   },
 };
 
