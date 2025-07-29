@@ -21,8 +21,8 @@ export function ConversionChart({ data }: ConversionChartProps) {
     >
       <Card className="transition-all duration-200 hover:shadow-lg">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold">ETH Volume Traded</CardTitle>
-          <CardDescription>Ethereum trading volume for the last 7 days</CardDescription>
+          <CardTitle className="text-lg font-semibold">Weekly Conversions</CardTitle>
+          <CardDescription>Conversion performance for the last 7 days</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-80">
@@ -41,7 +41,7 @@ export function ConversionChart({ data }: ConversionChartProps) {
                   axisLine={false}
                 />
                 <Tooltip
-                  formatter={(value: number) => [`$${(value / 1000000).toFixed(2)}M`, 'Volume']}
+                  formatter={(value: number) => [value.toLocaleString(), 'Conversions']}
                   labelClassName="text-sm font-medium"
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
@@ -51,7 +51,7 @@ export function ConversionChart({ data }: ConversionChartProps) {
                   }}
                 />
                 <Bar
-                  dataKey="volume"
+                  dataKey="conversions"
                   fill="#10B981"
                   radius={[4, 4, 0, 0]}
                   className="transition-all duration-200 hover:opacity-80"

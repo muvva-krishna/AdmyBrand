@@ -9,11 +9,9 @@ import { ChannelChart } from '@/components/channel-chart';
 import { DataTable } from '@/components/data-table';
 import { RealTimeIndicator } from '@/components/real-time-indicator';
 import { 
-  getMetricsDataFromApi,
-  getEthereumChartData,
-  getCryptoTableData,
-  getCryptoChannelData,
-  generateTableData,
+  generateMetricsData, 
+  generateChartData, 
+  generateTableData, 
   generateChannelData,
   type MetricData,
   type ChartDataPoint,
@@ -28,54 +26,17 @@ export default function Dashboard() {
   const [channelData, setChannelData] = useState<ChannelData[]>([]);
 
   useEffect(() => {
-    // Initial data load with live data
-    const loadInitialData = async () => {
-      setIsLoading(true);
-      try {
-        const [metrics, charts, table, channels] = await Promise.all([
-          getMetricsDataFromApi(),
-          getEthereumChartData(),
-          getCryptoTableData(),
-          getCryptoChannelData()
-        ]);
-        setMetricsData(metrics);
-        setChartData(charts);
-        setTableData(table);
-        setChannelData(channels);
-      } catch (error) {
-        console.error('Failed to load initial data:', error);
-        // Fallback to static data on error
-        setTableData(generateTableData());
-        setChannelData(generateChannelData());
-      } finally {
-        setIsLoading(false);
-        setLastUpdated(new Date());
-      }
-    };
+    // Initial data load
+    setMetricsData(generateMetricsData());
+    setChartData(generateChartData());
+    setTableData(generateTableData());
+    setChannelData(generateChannelData());
 
-    loadInitialData();
-
-    // Real-time updates every 60 seconds
+    // Simulate real-time updates every 30 seconds
     const interval = setInterval(() => {
-      const updateData = async () => {
-        try {
-          const [metrics, charts, table, channels] = await Promise.all([
-            getMetricsDataFromApi(),
-            getEthereumChartData(),
-            getCryptoTableData(),
-            getCryptoChannelData()
-          ]);
-          setMetricsData(metrics);
-          setChartData(charts);
-          setTableData(table);
-          setChannelData(channels);
-          setLastUpdated(new Date());
-        } catch (error) {
-          console.error('Failed to update data:', error);
-        }
-      };
-      updateData();
-    }, 60000);
+      setMetricsData(generateMetricsData());
+      setChartData(generateChartData());
+    }, 30000);
 
     return () => clearInterval(interval);
   }, []);
@@ -88,9 +49,9 @@ export default function Dashboard() {
         {/* Header Section */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Crypto Analytics Dashboard</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
             <p className="text-muted-foreground mt-2">
-              Track cryptocurrency market performance in real-time
+              Track your digital marketing performance in real-time
             </p>
           </div>
           <RealTimeIndicator />
