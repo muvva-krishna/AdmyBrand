@@ -1,5 +1,6 @@
 import { addDays, subDays, format } from 'date-fns';
 
+// --- INTERFACES (No changes needed here) ---
 export interface MetricData {
   title: string;
   value: string;
@@ -33,6 +34,40 @@ export interface ChannelData {
   value: number;
   color: string;
 }
+
+
+// --- NEW API-BASED FUNCTION FOR METRIC CARDS ---
+
+/**
+ * Fetches data for the top 4 cryptocurrencies from the CoinCap API 
+ * and formats it for the Metric Cards.
+ * * @returns {Promise<MetricData[]>} A promise that resolves to an array of metric data.
+ */
+export const getMetricsDataFromApi = async (): Promise<MetricData[]> => {
+  try {
+    const response = await fetch('https://api.coincap.io/v2/assets?limit=4');
+    if (!response.ok) {
+      throw new Error(`API call failed with status: ${response.status}`);
+    }
+    const { data } = await response.json();
+
+    // Map API data to the MetricData interface
+    const icons: string[] = ['DollarSign', 'Users', 'Target', 'TrendingUp'];
+    return data.map((asset: any, index: number) => ({
+      title: asset.name,
+      value: `$${parseFloat(asset.priceUsd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      change: parseFloat(asset.changePercent24Hr),
+      trend: parseFloat(asset.changePercent24Hr) >= 0 ? 'up' : 'down',
+      icon: icons[index]
+    }));
+  } catch (error) {
+    console.error("Failed to fetch metrics data:", error);
+    return []; // Return an empty array on error
+  }
+};
+
+
+// --- EXISTING STATIC DATA FUNCTIONS (Used for reference and fallback) ---
 
 // Generate mock metrics data
 export const generateMetricsData = (): MetricData[] => [
